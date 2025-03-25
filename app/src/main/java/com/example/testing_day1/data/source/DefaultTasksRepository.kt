@@ -33,24 +33,24 @@ import kotlinx.coroutines.withContext
 /**
  * Concrete implementation to load tasks from the data sources into a cache.
  */
-class DefaultTasksRepository(
+class DefaultTasksRepository (
     private val tasksRemoteDataSource: TasksDataSource,
-    private val tasksLocalDataSource: TasksDataSource,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO): IDefaultTasksRepository {
+    private val tasksLocalDataSource: TasksDataSource
+) : IDefaultTasksRepository {
 
-
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     companion object {
         @Volatile
         private var INSTANCE: DefaultTasksRepository? = null
 
         fun getRepository(app: Application): DefaultTasksRepository {
+            val database = Room.databaseBuilder(
+                app.applicationContext,
+                ToDoDatabase::class.java, "Tasks.db"
+            )
+                .build()
             return INSTANCE ?: synchronized(this) {
-                val database = Room.databaseBuilder(
-                    app.applicationContext,
-                    ToDoDatabase::class.java, "Tasks.db"
-                ).build()
-
                 DefaultTasksRepository(
                     TasksRemoteDataSource,
                     TasksLocalDataSource(database.taskDao())
@@ -61,7 +61,12 @@ class DefaultTasksRepository(
         }
     }
 
+    init {
 
+
+        /*tasksRemoteDataSource = TasksRemoteDataSource
+        tasksLocalDataSource = TasksLocalDataSource(database.taskDao())*/
+    }
 
     override suspend fun getTasks(forceUpdate: Boolean): Result<List<Task>> {
         if (forceUpdate) {

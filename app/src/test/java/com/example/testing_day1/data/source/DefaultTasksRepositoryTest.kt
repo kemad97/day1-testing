@@ -1,48 +1,46 @@
-package com.example.testing_day1.data.source
+package com.example.testing_day1.data.sources
 
-import androidx.media3.test.utils.FakeDataSource
 import com.example.testing_day1.data.Task
-import kotlinx.coroutines.runBlocking
+import com.example.testing_day1.data.source.DefaultTasksRepository
+import com.example.testing_day1.data.source.TasksDataSource
+import com.example.testing_day1.data.sources.remote.FakeRemoteDataSource
+import kotlinx.coroutines.test.runTest
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.core.IsEqual
 import org.junit.Before
 import org.junit.Test
+import com.example.testing_day1.data.Result
+import com.example.testing_day1.data.source.FakeLocalDataSource
 
+class DefaultTasksRepositoryTest {
 
-class DefaultTasksRepositoryTest{
-
-    private val localTasks = mutableListOf(
-        Task("task1"),
-        Task("task2")
-
+    private val localTasks = listOf(
+        Task(id = "1", title = "Task 1"),
+        Task(id = "2", title = "Task 2"),
     )
 
-    private val remoteTasks = mutableListOf(
-        Task("task1"),
-        Task("task2")
+    private val remoteTasks = listOf(
+        Task(id = "3", title = "Task 3"),
+        Task(id = "4", title = "Task 4"),
     )
 
-    private lateinit var fakeLocalDataSource: FakeDataSource
-    private lateinit var fakeRemoteDataSource: FakeDataSource
-    private lateinit var repository: DefaultTasksRepository
+    private lateinit var localDataSource: TasksDataSource
+    private lateinit var remoteDataSource: TasksDataSource
+    private lateinit var repo: DefaultTasksRepository
 
     @Before
-    fun setup(){
-        fakeLocalDataSource = FakeTasksDataSource(localTasks)
-        fakeRemoteDataSource = FakeTasksDataSource(remoteTasks)
-        repository = DefaultTasksRepository(fakeLocalDataSource, fakeRemoteDataSource)
-
+    fun setUp() {
+        localDataSource = FakeLocalDataSource(localTasks.toMutableList())
+        remoteDataSource = FakeRemoteDataSource(remoteTasks.toMutableList())
+        repo = DefaultTasksRepository(remoteDataSource, localDataSource)
     }
 
     @Test
-    fun getTasks_requestsAllTasksFromLocalDataSource() = runBlocking {
+    fun getTask_false_Success() = runTest {
 
-        val result=repository.getTasks(false) as Result.Success
-        assertThat(result.data, `is`(localTasks))
+        val result = repo.getTask("1", false) as Result.Success
 
+        assertThat(result.data, `is`(localTasks[0]))
     }
 
-
 }
-

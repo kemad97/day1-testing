@@ -1,11 +1,11 @@
 package com.example.testing_day1.data.source
 
 import androidx.lifecycle.LiveData
-import androidx.media3.test.utils.FakeDataSource
 import com.example.testing_day1.data.Result
 import com.example.testing_day1.data.Task
+import java.lang.Exception
 
-class FakeTasksDataSource(private val tasks: MutableList<Task> = mutableListOf()): TasksDataSource{
+class FakeLocalDataSource(private val tasks: MutableList<Task> = mutableListOf()): TasksDataSource{
     override fun observeTasks(): LiveData<Result<List<Task>>> {
         TODO("Not yet implemented")
     }
@@ -21,10 +21,16 @@ class FakeTasksDataSource(private val tasks: MutableList<Task> = mutableListOf()
     override fun observeTask(taskId: String): LiveData<Result<Task>> {
         TODO("Not yet implemented")
     }
-
     override suspend fun getTask(taskId: String): Result<Task> {
-        TODO("Not yet implemented")
+        tasks?.let {
+            tasks.forEach { task ->
+                if (task.id == taskId) return Result.Success(task)
+            }
+            return Result.Error(Exception("Task Not Found"))
+        }
+        return Result.Error(Exception("Error"))
     }
+
 
     override suspend fun refreshTask(taskId: String) {
         TODO("Not yet implemented")
